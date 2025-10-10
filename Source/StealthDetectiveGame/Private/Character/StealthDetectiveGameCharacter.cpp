@@ -16,6 +16,67 @@
 #include "Objective/StealthEvidence.h"
 #include "Player/StealthDetectiveGamePlayerController.h"
 #include "DrawDebugHelpers.h"
+#include "Objective/StealthTrailStart.h"
+
+AStealthEvidence* AStealthDetectiveGameCharacter::EvidenceInView() const
+{
+	if (!PhotoCamera) return nullptr;
+
+	FVector CameraLocation = PhotoCamera->GetComponentLocation();
+	FVector ForwardVector = PhotoCamera->GetForwardVector();
+	FVector TraceStart = CameraLocation;
+	FVector TraceEnd = CameraLocation + ForwardVector * PhotoTraceEnd;
+	FQuat BoxRotation = PhotoCamera->GetComponentQuat();
+
+	FCollisionQueryParams QueryParams;
+	QueryParams.AddIgnoredActor(this);
+
+	FCollisionObjectQueryParams ObjectQueryParams;
+	ObjectQueryParams.AddObjectTypesToQuery(ECC_WorldDynamic);
+	ObjectQueryParams.AddObjectTypesToQuery(ECC_WorldStatic);
+	ObjectQueryParams.AddObjectTypesToQuery(ECC_GameTraceChannel2);
+
+	TArray<FHitResult> HitResults;
+	GetWorld()->SweepMultiByChannel(
+		HitResults,
+		TraceStart,
+		TraceEnd,
+		BoxRotation,
+		ECC_GameTraceChannel2,
+		FCollisionShape::MakeBox(BoxExtent),
+		QueryParams
+	);
+
+	DrawDebugBox(GetWorld(), TraceEnd, BoxExtent, BoxRotation, FColor::Green, false, 2.0f);
+	
+	
+	for (const FHitResult& Hit : HitResults)
+	{
+		if (AStealthEvidence* Evidence = Cast<AStealthEvidence>(Hit.GetActor()))
+		{
+			// Visibility check: Line trace from camera to evidence actor
+			FHitResult VisibilityHit;
+			FVector EvidenceLocation = Evidence->GetActorLocation();
+			GetWorld()->LineTraceSingleByChannel(
+				VisibilityHit,
+				CameraLocation,
+				EvidenceLocation,
+				ECC_Visibility,
+				QueryParams
+			);
+
+			DrawDebugLine(GetWorld(), CameraLocation, EvidenceLocation, FColor::Blue, false, 2.0f);
+			UE_LOG(LogStealthDetectiveGame, Log, TEXT("Visibility Hit Actor: %s"), *GetNameSafe(VisibilityHit.GetActor()));
+			
+			if (VisibilityHit.GetActor()->GetClass() == Evidence->GetClass())
+			{
+				return Evidence; // Stop after finding the first visible evidence
+			}
+		}
+	}
+
+	return nullptr;
+}
 
 // Construction and Input Setup
 AStealthDetectiveGameCharacter::AStealthDetectiveGameCharacter()
@@ -101,7 +162,7 @@ void AStealthDetectiveGameCharacter::SetupPlayerInputComponent(UInputComponent* 
 		
 		EnhancedInputComponent->BindAction(EvidenceScanAction, ETriggerEvent::Started, this,
 		                                   &AStealthDetectiveGameCharacter::StartScanning);
-		EnhancedInputComponent->BindAction(EvidenceScanAction, ETriggerEvent::Completed, this,
+		EnhancedInputComponent->BindAction(EvidenceScanAction, ETriggerEvent::Triggered, this,
 		                                   &AStealthDetectiveGameCharacter::EvidenceScanned);
 	}
 	else
@@ -154,16 +215,14 @@ void AStealthDetectiveGameCharacter::EnableCamera()
 		if (!bIsCameraEnabled)
 		{
 			MyController->EnableMappingContext(FName("Camera"));
-			bIsThirdPerson = true;
-			ToggleCamera(bIsThirdPerson);
+			ToggleCamera();
 			bUseControllerRotationYaw = true;
 			bIsCameraEnabled = true;
 		}
 		else
 		{
 			MyController->DisableMappingContext(FName("Camera"));
-			bIsThirdPerson = false;
-			ToggleCamera(bIsThirdPerson);
+			ToggleCamera();
 			bUseControllerRotationYaw = false;
 			bIsCameraEnabled = false;
 		}
@@ -182,64 +241,19 @@ void AStealthDetectiveGameCharacter::ZoomOutCamera(const FInputActionValue& Valu
 
 void AStealthDetectiveGameCharacter::TakePicture()
 {
-	if (!PhotoCamera) return;
-
-	FVector CameraLocation = PhotoCamera->GetComponentLocation();
-	FVector ForwardVector = PhotoCamera->GetForwardVector();
-	FVector TraceStart = CameraLocation;
-	FVector TraceEnd = CameraLocation + ForwardVector * PhotoTraceEnd;
-	FQuat BoxRotation = PhotoCamera->GetComponentQuat();
-
-	FCollisionQueryParams QueryParams;
-	QueryParams.AddIgnoredActor(this);
-
-	FCollisionObjectQueryParams ObjectQueryParams;
-	ObjectQueryParams.AddObjectTypesToQuery(ECC_WorldDynamic);
-	ObjectQueryParams.AddObjectTypesToQuery(ECC_WorldStatic);
-	ObjectQueryParams.AddObjectTypesToQuery(ECC_GameTraceChannel2);
-
-	TArray<FHitResult> HitResults;
-	GetWorld()->SweepMultiByChannel(
-		HitResults,
-		TraceStart,
-		TraceEnd,
-		BoxRotation,
-		ECC_GameTraceChannel2,
-		FCollisionShape::MakeBox(BoxExtent),
-		QueryParams
-	);
-
-	DrawDebugBox(GetWorld(), TraceEnd, BoxExtent, BoxRotation, FColor::Green, false, 2.0f);
-	
-	
-	for (const FHitResult& Hit : HitResults)
+	AStealthEvidence* Evidence = EvidenceInView();
+	if (Evidence && Evidence->GameplayTags.HasTag(FGameplayTag::RequestGameplayTag("Evidence.Objective")))
 	{
-		AStealthEvidence* HitEvidence = Cast<AStealthEvidence>(Hit.GetActor());
-		if (HitEvidence)
+		for (const FGameplayTag& Tag : Evidence->GameplayTags.GetGameplayTagArray())
 		{
-			// Visibility check: Line trace from camera to evidence actor
-			FHitResult VisibilityHit;
-			FVector EvidenceLocation = HitEvidence->GetActorLocation();
-			GetWorld()->LineTraceSingleByChannel(
-				VisibilityHit,
-				CameraLocation,
-				EvidenceLocation,
-				ECC_Visibility,
-				QueryParams
-			);
-
-			DrawDebugLine(GetWorld(), CameraLocation, EvidenceLocation, FColor::Blue, false, 2.0f);
-			UE_LOG(LogStealthDetectiveGame, Log, TEXT("Visibility Hit Actor: %s"), *GetNameSafe(VisibilityHit.GetActor()));
-			
-			if (VisibilityHit.GetActor()->GetClass() == HitEvidence->GetClass())
+			if (Tag.MatchesTag(FGameplayTag::RequestGameplayTag("Evidence.Objective")))
 			{
-				OnEvidenceFound.Broadcast(HitEvidence);
-				break; // Stop after finding the first visible evidence
+				UE_LOG(LogStealthDetectiveGame, Log, TEXT("Objective Evidence Found: %s"), *Tag.ToString());
+				OnEvidenceFound.Broadcast(Tag);
+				return;
 			}
 		}
 	}
-
-	
 }
 
 void AStealthDetectiveGameCharacter::EnableCameraFlash()
@@ -255,31 +269,46 @@ void AStealthDetectiveGameCharacter::EnableDetectiveMode()
 		if (!bDetectiveMode)
 		{
 			MyController->EnableMappingContext(FName("Detective Mode"));
-			bIsThirdPerson = true;
-			ToggleCamera(bIsThirdPerson);
-			bUseControllerRotationYaw = true;
 			bDetectiveMode = true;
-
 			
 			// Add post process material to PhotoCamera
-			if (PhotoCamera && DetectiveModePostProcessMaterial)
+			if (DetectiveModePostProcessMaterial)
 			{
-				PhotoCamera->PostProcessSettings.AddBlendable(DetectiveModePostProcessMaterial, 1.0f);
+				if (PhotoCamera)
+				{
+					PhotoCamera->PostProcessSettings.AddBlendable(DetectiveModePostProcessMaterial, 1.0f);
+				}
+				if (FollowCamera)
+				{
+					FollowCamera->PostProcessSettings.AddBlendable(DetectiveModePostProcessMaterial, 1.0f);
+				}
+			}
+			if (bHasActiveTrail)
+			{
+				OnActiveTrail.Broadcast(true);
 			}
 			
 		}
 		else
 		{
 			MyController->DisableMappingContext(FName("Detective Mode"));
-			bIsThirdPerson = false;
-			ToggleCamera(bIsThirdPerson);
-			bUseControllerRotationYaw = false;
 			bDetectiveMode = false;
 
 			// Remove post process material
-			if (PhotoCamera && DetectiveModePostProcessMaterial)
+			if (DetectiveModePostProcessMaterial)
 			{
-				PhotoCamera->PostProcessSettings.RemoveBlendable(DetectiveModePostProcessMaterial);
+				if (PhotoCamera)
+				{
+					PhotoCamera->PostProcessSettings.RemoveBlendable(DetectiveModePostProcessMaterial);
+				}
+				if (FollowCamera)
+				{
+					FollowCamera->PostProcessSettings.RemoveBlendable(DetectiveModePostProcessMaterial);
+				}
+			}
+			if (bHasActiveTrail)
+			{
+				OnActiveTrail.Broadcast(false);
 			}
 		}
 	}
@@ -287,10 +316,35 @@ void AStealthDetectiveGameCharacter::EnableDetectiveMode()
 
 void AStealthDetectiveGameCharacter::StartScanning()
 {
+	if (!bIsThirdPerson){}
 }
 
 void AStealthDetectiveGameCharacter::EvidenceScanned()
 {
+	if (!bIsThirdPerson)
+	{
+		AStealthTrailStart* TrailStart = Cast<AStealthTrailStart>(EvidenceInView());
+		if (TrailStart)
+		{
+			UE_LOG(LogStealthDetectiveGame, Log, TEXT("Trail Start Found: %s"), *TrailStart->GetName());
+			if (TrailStart->GameplayTags.HasTag(FGameplayTag::RequestGameplayTag("Evidence.Trail")))
+			{
+				UE_LOG(LogStealthDetectiveGame, Log, TEXT("Trail Evidence Found"));
+				for (const FGameplayTag& Tag : TrailStart->GameplayTags.GetGameplayTagArray())
+				{
+					if (Tag.MatchesTag(FGameplayTag::RequestGameplayTag("Evidence.Trail")))
+					{
+						UE_LOG(LogStealthDetectiveGame, Log, TEXT("Trail Found: %s"), *Tag.ToString());
+						bHasActiveTrail = true;
+						OnEvidenceFound.Broadcast(Tag);
+						return;
+					}
+				}
+			}
+			
+		}
+	}
+	
 }
 
 // Public Interface: Movement, Camera, and Events

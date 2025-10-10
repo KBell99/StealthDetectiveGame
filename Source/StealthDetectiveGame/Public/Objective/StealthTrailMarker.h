@@ -5,23 +5,17 @@
 #include "CoreMinimal.h"
 #include "GameplayTagContainer.h"
 #include "GameFramework/Actor.h"
-#include "Interface/Scannable.h"
-#include "StealthEvidence.generated.h"
+#include "StealthTrailMarker.generated.h"
 
-UCLASS()
-class STEALTHDETECTIVEGAME_API AStealthEvidence : public AActor
+UCLASS(BlueprintType)
+class STEALTHDETECTIVEGAME_API AStealthTrailMarker : public AActor
 {
 	GENERATED_BODY()
 	
 public:	
 	// Sets default values for this actor's properties
-	AStealthEvidence();
+	AStealthTrailMarker();
 
-	
-	UPROPERTY(EditAnywhere, Category="Gameplay")
-	FGameplayTagContainer GameplayTags;
-
-	
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;

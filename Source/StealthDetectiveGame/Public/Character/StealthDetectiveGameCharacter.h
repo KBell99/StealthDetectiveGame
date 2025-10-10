@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "GameplayTagContainer.h"
 #include "StealthCharacterBase.h"
 #include "GameFramework/Character.h"
 #include "Logging/LogMacros.h"
@@ -16,7 +17,8 @@ struct FInputActionValue;
 
 DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
 
-DECLARE_MULTICAST_DELEGATE_OneParam(FEvidenceFound, AStealthEvidence* /*FoundEvidence*/);
+DECLARE_MULTICAST_DELEGATE_OneParam(FEvidenceFound, FGameplayTag /*EvidenceTag*/);
+DECLARE_MULTICAST_DELEGATE_OneParam(FActiveTrail, bool /*bHasActiveTrail*/);
 
 /**
  *  A simple player-controllable third person character
@@ -48,8 +50,14 @@ class AStealthDetectiveGameCharacter : public AStealthCharacterBase
 	
 	bool bIsCameraEnabled = false;
 	bool bDetectiveMode = false;
+
+	UPROPERTY(BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 	bool bIsThirdPerson = true;
+	
 	bool bIsCameraFlashEnabled = false;
+	bool bHasActiveTrail = false;
+
+	AStealthEvidence* EvidenceInView() const;
 
 	
 protected:
@@ -123,10 +131,11 @@ public:
 	virtual void DoJumpEnd();
 
 	FEvidenceFound OnEvidenceFound;
+	FActiveTrail OnActiveTrail;
 
 	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
 
 	UFUNCTION(BlueprintImplementableEvent)
-	void ToggleCamera(bool bThirdPerson);
+	void ToggleCamera();
 };
