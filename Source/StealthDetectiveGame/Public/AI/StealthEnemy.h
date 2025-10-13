@@ -4,7 +4,10 @@
 
 #include "CoreMinimal.h"
 #include "Character/StealthCharacterBase.h"
+#include "ScalableFloat.h"
 #include "StealthEnemy.generated.h"
+
+
 /** Patrol Target */
 DECLARE_MULTICAST_DELEGATE(FOnTargetLocationGet);
 
@@ -27,4 +30,12 @@ public:
 	FVector GetNextPatrolPointLocation();
 
 	FOnTargetLocationGet OnTargetLocationGet;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI")
+	FScalableFloat StunDurations;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI")
+	float StunDuration;
+	
+	virtual void Stun(float HitDistance = 0.0f) override;
 };

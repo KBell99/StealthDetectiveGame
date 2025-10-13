@@ -44,6 +44,10 @@ class AStealthDetectiveGameCharacter : public AStealthCharacterBase
 	FVector BoxExtent = FVector(100.0f, 200.0f, 200.0f);
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Photo", meta = (AllowPrivateAccess = "true"))
 	float PhotoTraceEnd = 200.0f;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Photo", meta = (AllowPrivateAccess = "true"))
+	FVector FlashBoxExtent = FVector(200.0f, 200.0f, 200.0f);
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Photo", meta = (AllowPrivateAccess = "true"))
+	float FlashTraceEnd = 200.0f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Photo", meta = (AllowPrivateAccess = "true"))
 	TScriptInterface<IBlendableInterface> DetectiveModePostProcessMaterial;
@@ -115,6 +119,8 @@ protected:
 	void EnableDetectiveMode();
 	void StartScanning();
 	void EvidenceScanned();
+
+	void FlashPhotography();
 	
 public:
 	// Public Interface: Movement, Camera, and Events

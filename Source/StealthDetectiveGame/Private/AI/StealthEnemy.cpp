@@ -15,3 +15,11 @@ FVector AStealthEnemy::GetNextPatrolPointLocation()
 	return PatrolPoints[CurrentPatrolPointIndex]->GetActorLocation();
 }
 
+void AStealthEnemy::Stun(float HitDistance)
+{
+	Super::Stun(HitDistance);
+
+	StunDuration = StunDurations.GetValueAtLevel(HitDistance);
+	bIsStunned = true;
+}
+

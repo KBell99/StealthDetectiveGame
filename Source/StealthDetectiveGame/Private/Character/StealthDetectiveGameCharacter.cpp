@@ -12,71 +12,12 @@
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
 #include "StealthDetectiveGame.h"
-#include "Engine/OverlapResult.h"
 #include "Objective/StealthEvidence.h"
 #include "Player/StealthDetectiveGamePlayerController.h"
 #include "DrawDebugHelpers.h"
+#include "AI/StealthEnemy.h"
 #include "Objective/StealthTrailStart.h"
 
-AStealthEvidence* AStealthDetectiveGameCharacter::EvidenceInView() const
-{
-	if (!PhotoCamera) return nullptr;
-
-	FVector CameraLocation = PhotoCamera->GetComponentLocation();
-	FVector ForwardVector = PhotoCamera->GetForwardVector();
-	FVector TraceStart = CameraLocation;
-	FVector TraceEnd = CameraLocation + ForwardVector * PhotoTraceEnd;
-	FQuat BoxRotation = PhotoCamera->GetComponentQuat();
-
-	FCollisionQueryParams QueryParams;
-	QueryParams.AddIgnoredActor(this);
-
-	FCollisionObjectQueryParams ObjectQueryParams;
-	ObjectQueryParams.AddObjectTypesToQuery(ECC_WorldDynamic);
-	ObjectQueryParams.AddObjectTypesToQuery(ECC_WorldStatic);
-	ObjectQueryParams.AddObjectTypesToQuery(ECC_GameTraceChannel2);
-
-	TArray<FHitResult> HitResults;
-	GetWorld()->SweepMultiByChannel(
-		HitResults,
-		TraceStart,
-		TraceEnd,
-		BoxRotation,
-		ECC_GameTraceChannel2,
-		FCollisionShape::MakeBox(BoxExtent),
-		QueryParams
-	);
-
-	DrawDebugBox(GetWorld(), TraceEnd, BoxExtent, BoxRotation, FColor::Green, false, 2.0f);
-	
-	
-	for (const FHitResult& Hit : HitResults)
-	{
-		if (AStealthEvidence* Evidence = Cast<AStealthEvidence>(Hit.GetActor()))
-		{
-			// Visibility check: Line trace from camera to evidence actor
-			FHitResult VisibilityHit;
-			FVector EvidenceLocation = Evidence->GetActorLocation();
-			GetWorld()->LineTraceSingleByChannel(
-				VisibilityHit,
-				CameraLocation,
-				EvidenceLocation,
-				ECC_Visibility,
-				QueryParams
-			);
-
-			DrawDebugLine(GetWorld(), CameraLocation, EvidenceLocation, FColor::Blue, false, 2.0f);
-			UE_LOG(LogStealthDetectiveGame, Log, TEXT("Visibility Hit Actor: %s"), *GetNameSafe(VisibilityHit.GetActor()));
-			
-			if (VisibilityHit.GetActor()->GetClass() == Evidence->GetClass())
-			{
-				return Evidence; // Stop after finding the first visible evidence
-			}
-		}
-	}
-
-	return nullptr;
-}
 
 // Construction and Input Setup
 AStealthDetectiveGameCharacter::AStealthDetectiveGameCharacter()
@@ -254,11 +195,108 @@ void AStealthDetectiveGameCharacter::TakePicture()
 			}
 		}
 	}
+
+	if (bIsCameraFlashEnabled)
+	{
+		FlashPhotography();
+	}
 }
 
 void AStealthDetectiveGameCharacter::EnableCameraFlash()
 {
 	bIsCameraFlashEnabled = !bIsCameraFlashEnabled;
+}
+
+AStealthEvidence* AStealthDetectiveGameCharacter::EvidenceInView() const
+{
+	if (!PhotoCamera) return nullptr;
+
+	FVector CameraLocation = PhotoCamera->GetComponentLocation();
+	FVector ForwardVector = PhotoCamera->GetForwardVector();
+	FVector TraceStart = CameraLocation;
+	FVector TraceEnd = CameraLocation + ForwardVector * PhotoTraceEnd;
+	FQuat BoxRotation = PhotoCamera->GetComponentQuat();
+
+	FCollisionQueryParams QueryParams;
+	QueryParams.AddIgnoredActor(this);
+
+	TArray<FHitResult> HitResults;
+	GetWorld()->SweepMultiByChannel(
+		HitResults,
+		TraceStart,
+		TraceEnd,
+		BoxRotation,
+		ECC_GameTraceChannel2,
+		FCollisionShape::MakeBox(BoxExtent),
+		QueryParams
+	);
+
+	DrawDebugBox(GetWorld(), TraceEnd, BoxExtent, BoxRotation, FColor::Green, false, 2.0f);
+	
+	
+	for (const FHitResult& Hit : HitResults)
+	{
+		if (AStealthEvidence* Evidence = Cast<AStealthEvidence>(Hit.GetActor()))
+		{
+			// Visibility check: Line trace from camera to evidence actor
+			FHitResult VisibilityHit;
+			FVector EvidenceLocation = Evidence->GetActorLocation();
+			GetWorld()->LineTraceSingleByChannel(
+				VisibilityHit,
+				CameraLocation,
+				EvidenceLocation,
+				ECC_Visibility,
+				QueryParams
+			);
+
+			DrawDebugLine(GetWorld(), CameraLocation, EvidenceLocation, FColor::Blue, false, 2.0f);
+			UE_LOG(LogStealthDetectiveGame, Log, TEXT("Visibility Hit Actor: %s"), *GetNameSafe(VisibilityHit.GetActor()));
+			
+			if (VisibilityHit.GetActor()->GetClass() == Evidence->GetClass())
+			{
+				return Evidence; // Stop after finding the first visible evidence
+			}
+		}
+	}
+
+	return nullptr;
+}
+
+void AStealthDetectiveGameCharacter::FlashPhotography()
+{
+	if (!PhotoCamera) return;
+
+	FVector CameraLocation = PhotoCamera->GetComponentLocation();
+	FVector ForwardVector = PhotoCamera->GetForwardVector();
+	FVector TraceStart = CameraLocation;
+	FVector TraceEnd = CameraLocation + ForwardVector * FlashTraceEnd;
+	FQuat BoxRotation = PhotoCamera->GetComponentQuat();
+
+	FCollisionQueryParams QueryParams;
+	QueryParams.AddIgnoredActor(this);
+
+	TArray<FHitResult> HitResults;
+	GetWorld()->SweepMultiByChannel(
+		HitResults,
+		TraceStart,
+		TraceEnd,
+		BoxRotation,
+		ECC_Visibility,
+		FCollisionShape::MakeBox(FlashBoxExtent),
+		QueryParams
+	);
+
+	DrawDebugBox(GetWorld(), TraceEnd, FlashBoxExtent,BoxRotation, FColor::Yellow, false, 2.0f);
+
+	for (const FHitResult& Hit : HitResults)
+	{
+		if (AStealthEnemy* Enemy = Cast<AStealthEnemy>(Hit.GetActor()))
+		{
+			Enemy->Stun();
+			UE_LOG(LogStealthDetectiveGame, Log, TEXT("Enemy Stunned: %s"), *Enemy->GetName());
+			return;
+		}
+	}
 }
 
 void AStealthDetectiveGameCharacter::EnableDetectiveMode()
@@ -346,6 +384,7 @@ void AStealthDetectiveGameCharacter::EvidenceScanned()
 	}
 	
 }
+
 
 // Public Interface: Movement, Camera, and Events
 void AStealthDetectiveGameCharacter::DoMove(float Right, float Forward)

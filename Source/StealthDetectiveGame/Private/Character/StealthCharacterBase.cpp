@@ -11,24 +11,6 @@ AStealthCharacterBase::AStealthCharacterBase()
 
 }
 
-// Called when the game starts or when spawned
-void AStealthCharacterBase::BeginPlay()
+void AStealthCharacterBase::Stun(float HitDistance)
 {
-	Super::BeginPlay();
-	
 }
-
-// Called every frame
-void AStealthCharacterBase::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-
-}
-
-// Called to bind functionality to input
-void AStealthCharacterBase::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
-{
-	Super::SetupPlayerInputComponent(PlayerInputComponent);
-
-}
-
