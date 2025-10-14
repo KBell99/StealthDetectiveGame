@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "GameplayTagContainer.h"
 #include "StealthCharacterBase.h"
 #include "GameFramework/Character.h"
 #include "Logging/LogMacros.h"
@@ -16,7 +17,8 @@ struct FInputActionValue;
 
 DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
 
-DECLARE_MULTICAST_DELEGATE_OneParam(FEvidenceFound, AStealthEvidence* /*FoundEvidence*/);
+DECLARE_MULTICAST_DELEGATE_OneParam(FEvidenceFound, FGameplayTag /*EvidenceTag*/);
+DECLARE_MULTICAST_DELEGATE_OneParam(FActiveTrail, bool /*bHasActiveTrail*/);
 
 /**
  *  A simple player-controllable third person character
@@ -42,14 +44,24 @@ class AStealthDetectiveGameCharacter : public AStealthCharacterBase
 	FVector BoxExtent = FVector(100.0f, 200.0f, 200.0f);
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Photo", meta = (AllowPrivateAccess = "true"))
 	float PhotoTraceEnd = 200.0f;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Photo", meta = (AllowPrivateAccess = "true"))
+	FVector FlashBoxExtent = FVector(200.0f, 200.0f, 200.0f);
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Photo", meta = (AllowPrivateAccess = "true"))
+	float FlashTraceEnd = 200.0f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Photo", meta = (AllowPrivateAccess = "true"))
 	TScriptInterface<IBlendableInterface> DetectiveModePostProcessMaterial;
 	
 	bool bIsCameraEnabled = false;
 	bool bDetectiveMode = false;
+
+	UPROPERTY(BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 	bool bIsThirdPerson = true;
+	
 	bool bIsCameraFlashEnabled = false;
+	bool bHasActiveTrail = false;
+
+	AStealthEvidence* EvidenceInView() const;
 
 	
 protected:
@@ -107,6 +119,8 @@ protected:
 	void EnableDetectiveMode();
 	void StartScanning();
 	void EvidenceScanned();
+
+	void FlashPhotography();
 	
 public:
 	// Public Interface: Movement, Camera, and Events
@@ -123,10 +137,11 @@ public:
 	virtual void DoJumpEnd();
 
 	FEvidenceFound OnEvidenceFound;
+	FActiveTrail OnActiveTrail;
 
 	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
 
 	UFUNCTION(BlueprintImplementableEvent)
-	void ToggleCamera(bool bThirdPerson);
+	void ToggleCamera();
 };

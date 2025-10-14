@@ -12,19 +12,16 @@ class STEALTHDETECTIVEGAME_API AStealthCharacterBase : public ACharacter
 {
 	GENERATED_BODY()
 
+
+protected:
+	UPROPERTY(VisibleAnywhere, Category="State")
+	bool bIsStunned = false;
+
+	
+	
 public:
 	// Sets default values for this character's properties
 	AStealthCharacterBase();
-
-protected:
-	// Called when the game starts or when spawned
-	virtual void BeginPlay() override;
-
-public:	
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
-
-	// Called to bind functionality to input
-	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
-
+	virtual void Stun(float HitDistance = 0.0f);
+	
 };
