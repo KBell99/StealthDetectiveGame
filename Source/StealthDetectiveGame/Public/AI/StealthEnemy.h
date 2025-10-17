@@ -8,8 +8,10 @@
 #include "StealthEnemy.generated.h"
 
 
+class UAIPerceptionComponent;
 /** Patrol Target */
 DECLARE_MULTICAST_DELEGATE(FOnTargetLocationGet);
+
 
 /**
  * 
@@ -18,24 +20,26 @@ UCLASS()
 class STEALTHDETECTIVEGAME_API AStealthEnemy : public AStealthCharacterBase
 {
 	GENERATED_BODY()
-
-public:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI")
-	TArray<AActor*> PatrolPoints;
+	
 	int32 CurrentPatrolPointIndex = 0;
 
+	UPROPERTY(EditAnywhere, Category = "AI", meta = (AllowPrivateAccess))
+	UAIPerceptionComponent* AIPerceptionComponent;
+	
+	
+	
+public:
+	AStealthEnemy();
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI")
+	TArray<AActor*> PatrolPoints;
+	
 	UFUNCTION(BlueprintCallable, Category = "AI")
 	FVector GetCurrentPatrolPointLocation();
 	UFUNCTION(BlueprintCallable, Category = "AI")
 	FVector GetNextPatrolPointLocation();
 
 	FOnTargetLocationGet OnTargetLocationGet;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI")
-	FScalableFloat StunDurations;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI")
-	float StunDuration;
 	
 	virtual void Stun(float HitDistance = 0.0f) override;
 };

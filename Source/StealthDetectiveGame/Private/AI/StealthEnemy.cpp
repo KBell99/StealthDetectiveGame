@@ -3,6 +3,14 @@
 
 #include "AI/StealthEnemy.h"
 
+#include "AI/StealthAIController.h"
+#include "Perception/AIPerceptionComponent.h"
+
+AStealthEnemy::AStealthEnemy()
+{
+	AIPerceptionComponent = CreateDefaultSubobject<UAIPerceptionComponent>(TEXT("AIPerceptionComponent"));
+}
+
 FVector AStealthEnemy::GetCurrentPatrolPointLocation()
 {
 	return PatrolPoints[CurrentPatrolPointIndex]->GetActorLocation();
@@ -18,8 +26,12 @@ FVector AStealthEnemy::GetNextPatrolPointLocation()
 void AStealthEnemy::Stun(float HitDistance)
 {
 	Super::Stun(HitDistance);
-
-	StunDuration = StunDurations.GetValueAtLevel(HitDistance);
+	
 	bIsStunned = true;
+
+	if (AStealthAIController* AIController = Cast<AStealthAIController>(Controller))
+	{
+		AIController->PawnIsStunned(HitDistance);
+	}
 }
 

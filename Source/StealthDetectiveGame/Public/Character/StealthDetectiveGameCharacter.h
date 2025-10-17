@@ -9,6 +9,7 @@
 #include "Logging/LogMacros.h"
 #include "StealthDetectiveGameCharacter.generated.h"
 
+class UAIPerceptionStimuliSourceComponent;
 class AStealthEvidence;
 class USpringArmComponent;
 class UCameraComponent;
@@ -48,9 +49,12 @@ class AStealthDetectiveGameCharacter : public AStealthCharacterBase
 	FVector FlashBoxExtent = FVector(200.0f, 200.0f, 200.0f);
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Photo", meta = (AllowPrivateAccess = "true"))
 	float FlashTraceEnd = 200.0f;
-
+	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Photo", meta = (AllowPrivateAccess = "true"))
 	TScriptInterface<IBlendableInterface> DetectiveModePostProcessMaterial;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="AI", meta = (AllowPrivateAccess = "true"))
+	UAIPerceptionStimuliSourceComponent* PerceptionStimuliSourceComponent;
 	
 	bool bIsCameraEnabled = false;
 	bool bDetectiveMode = false;

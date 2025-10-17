@@ -17,6 +17,7 @@
 #include "DrawDebugHelpers.h"
 #include "AI/StealthEnemy.h"
 #include "Objective/StealthTrailStart.h"
+#include "Perception/AIPerceptionStimuliSourceComponent.h"
 
 
 // Construction and Input Setup
@@ -59,6 +60,8 @@ AStealthDetectiveGameCharacter::AStealthDetectiveGameCharacter()
 	PhotoCamera->SetupAttachment(GetMesh(), FName("CameraSocket"));
 	PhotoCamera->bUsePawnControlRotation = true;
 
+	PerceptionStimuliSourceComponent = CreateDefaultSubobject<UAIPerceptionStimuliSourceComponent>(TEXT("PerceptionStimuliSourceComponent"));
+	
 	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character)
 	// are set in the derived blueprint asset named ThirdPersonCharacter (to avoid direct content references in C++)
 }
