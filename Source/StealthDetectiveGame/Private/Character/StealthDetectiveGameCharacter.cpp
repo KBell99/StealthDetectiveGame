@@ -16,6 +16,7 @@
 #include "Player/StealthDetectiveGamePlayerController.h"
 #include "DrawDebugHelpers.h"
 #include "AI/StealthEnemy.h"
+#include "Interface/Interactable.h"
 #include "Objective/StealthTrailStart.h"
 #include "Perception/AIPerceptionStimuliSourceComponent.h"
 
@@ -60,8 +61,9 @@ AStealthDetectiveGameCharacter::AStealthDetectiveGameCharacter()
 	PhotoCamera->SetupAttachment(GetMesh(), FName("CameraSocket"));
 	PhotoCamera->bUsePawnControlRotation = true;
 
-	PerceptionStimuliSourceComponent = CreateDefaultSubobject<UAIPerceptionStimuliSourceComponent>(TEXT("PerceptionStimuliSourceComponent"));
-	
+	PerceptionStimuliSourceComponent = CreateDefaultSubobject<UAIPerceptionStimuliSourceComponent>(
+		TEXT("PerceptionStimuliSourceComponent"));
+
 	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character)
 	// are set in the derived blueprint asset named ThirdPersonCharacter (to avoid direct content references in C++)
 }
@@ -89,6 +91,9 @@ void AStealthDetectiveGameCharacter::SetupPlayerInputComponent(UInputComponent* 
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this,
 		                                   &AStealthDetectiveGameCharacter::Look);
 
+		EnhancedInputComponent->BindAction(InteractAction, ETriggerEvent::Triggered, this,
+		                                   &AStealthDetectiveGameCharacter::Interact);
+
 		//Camera
 		EnhancedInputComponent->BindAction(EnableCameraAction, ETriggerEvent::Triggered, this,
 		                                   &AStealthDetectiveGameCharacter::EnableCamera);
@@ -103,7 +108,7 @@ void AStealthDetectiveGameCharacter::SetupPlayerInputComponent(UInputComponent* 
 		//Detective Mode
 		EnhancedInputComponent->BindAction(EnableDetectiveModeAction, ETriggerEvent::Triggered, this,
 		                                   &AStealthDetectiveGameCharacter::EnableDetectiveMode);
-		
+
 		EnhancedInputComponent->BindAction(EvidenceScanAction, ETriggerEvent::Started, this,
 		                                   &AStealthDetectiveGameCharacter::StartScanning);
 		EnhancedInputComponent->BindAction(EvidenceScanAction, ETriggerEvent::Triggered, this,
@@ -235,8 +240,8 @@ AStealthEvidence* AStealthDetectiveGameCharacter::EvidenceInView() const
 	);
 
 	DrawDebugBox(GetWorld(), TraceEnd, BoxExtent, BoxRotation, FColor::Green, false, 2.0f);
-	
-	
+
+
 	for (const FHitResult& Hit : HitResults)
 	{
 		if (AStealthEvidence* Evidence = Cast<AStealthEvidence>(Hit.GetActor()))
@@ -253,8 +258,9 @@ AStealthEvidence* AStealthDetectiveGameCharacter::EvidenceInView() const
 			);
 
 			DrawDebugLine(GetWorld(), CameraLocation, EvidenceLocation, FColor::Blue, false, 2.0f);
-			UE_LOG(LogStealthDetectiveGame, Log, TEXT("Visibility Hit Actor: %s"), *GetNameSafe(VisibilityHit.GetActor()));
-			
+			UE_LOG(LogStealthDetectiveGame, Log, TEXT("Visibility Hit Actor: %s"),
+			       *GetNameSafe(VisibilityHit.GetActor()));
+
 			if (VisibilityHit.GetActor()->GetClass() == Evidence->GetClass())
 			{
 				return Evidence; // Stop after finding the first visible evidence
@@ -289,7 +295,7 @@ void AStealthDetectiveGameCharacter::FlashPhotography()
 		QueryParams
 	);
 
-	DrawDebugBox(GetWorld(), TraceEnd, FlashBoxExtent,BoxRotation, FColor::Yellow, false, 2.0f);
+	DrawDebugBox(GetWorld(), TraceEnd, FlashBoxExtent, BoxRotation, FColor::Yellow, false, 2.0f);
 
 	for (const FHitResult& Hit : HitResults)
 	{
@@ -311,7 +317,7 @@ void AStealthDetectiveGameCharacter::EnableDetectiveMode()
 		{
 			MyController->EnableMappingContext(FName("Detective Mode"));
 			bDetectiveMode = true;
-			
+
 			// Add post process material to PhotoCamera
 			if (DetectiveModePostProcessMaterial)
 			{
@@ -328,7 +334,6 @@ void AStealthDetectiveGameCharacter::EnableDetectiveMode()
 			{
 				OnActiveTrail.Broadcast(true);
 			}
-			
 		}
 		else
 		{
@@ -357,7 +362,9 @@ void AStealthDetectiveGameCharacter::EnableDetectiveMode()
 
 void AStealthDetectiveGameCharacter::StartScanning()
 {
-	if (!bIsThirdPerson){}
+	if (!bIsThirdPerson)
+	{
+	}
 }
 
 void AStealthDetectiveGameCharacter::EvidenceScanned()
@@ -382,10 +389,26 @@ void AStealthDetectiveGameCharacter::EvidenceScanned()
 					}
 				}
 			}
-			
 		}
 	}
-	
+}
+
+void AStealthDetectiveGameCharacter::Interact()
+{
+	TArray<AActor*> OverlappingActors;
+	GetOverlappingActors(OverlappingActors);
+
+	for (AActor* Actor : OverlappingActors)
+	{
+		if (!Actor) continue;
+
+		if (IInteractable* Interactable = Cast<IInteractable>(Actor))
+		{
+			Interactable->OnInteract();
+			UE_LOG(LogStealthDetectiveGame, Log, TEXT("Interacted with: %s"), *Actor->GetName());
+			return;
+		}
+	}
 }
 
 
@@ -454,7 +477,7 @@ void AStealthDetectiveGameCharacter::HandleDeath()
 
 	FollowCamera->SetActive(true);
 	PhotoCamera->SetActive(false);
-	
+
 	FollowCamera->DetachFromComponent(FDetachmentTransformRules::KeepWorldTransform);
 
 	bUseControllerRotationYaw = false;

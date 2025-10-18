@@ -88,6 +88,9 @@ protected:
 	UPROPERTY(EditAnywhere, Category="Input|Default")
 	UInputAction* EnableCameraAction;
 
+	UPROPERTY(EditAnywhere, Category="Input|Default")
+	UInputAction* InteractAction;
+	
 	UPROPERTY(EditAnywhere, Category="Input|Camera")
 	UInputAction* ZoomInAction;
 
@@ -106,6 +109,7 @@ protected:
 	UPROPERTY(EditAnywhere, Category="Input|Detective")
 	UInputAction* EvidenceScanAction;
 	
+	
 
 	// Construction and Input Setup
 	AStealthDetectiveGameCharacter();
@@ -123,6 +127,7 @@ protected:
 	void EnableDetectiveMode();
 	void StartScanning();
 	void EvidenceScanned();
+	void Interact();
 
 	void FlashPhotography();
 	
