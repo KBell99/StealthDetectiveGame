@@ -140,6 +140,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Input")
 	virtual void DoJumpEnd();
 
+	virtual void Stun(float HitDistance = 0.f) override;
+	virtual void HandleDeath();
+	
 	FEvidenceFound OnEvidenceFound;
 	FActiveTrail OnActiveTrail;
 

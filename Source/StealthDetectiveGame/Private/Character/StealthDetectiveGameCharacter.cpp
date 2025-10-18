@@ -431,3 +431,31 @@ void AStealthDetectiveGameCharacter::DoJumpEnd()
 	// signal the character to stop jumping
 	StopJumping();
 }
+
+void AStealthDetectiveGameCharacter::Stun(float HitDistance)
+{
+	Super::Stun(HitDistance);
+
+	HandleDeath();
+}
+
+void AStealthDetectiveGameCharacter::HandleDeath()
+{
+	// disable the collision capsule to avoid being hit again while dead
+	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+	// disable character movement
+	GetCharacterMovement()->DisableMovement();
+
+	// enable full ragdoll physics
+	GetMesh()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+	GetMesh()->SetCollisionObjectType(ECC_PhysicsBody);
+	GetMesh()->SetSimulatePhysics(true);
+
+	FollowCamera->SetActive(true);
+	PhotoCamera->SetActive(false);
+	
+	FollowCamera->DetachFromComponent(FDetachmentTransformRules::KeepWorldTransform);
+
+	bUseControllerRotationYaw = false;
+}
