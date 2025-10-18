@@ -36,6 +36,10 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Components|State")
 	bool bIsDoorOpen;
 
+	bool bIsAnimating;
+	
+	FTimerHandle AnimationTimerHandle;
+	
 	
 public:	
 	// Sets default values for this actor's properties
@@ -43,4 +47,6 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	virtual void OnInteract() override;
+
+	virtual void DoorAnimationFinished();
 };

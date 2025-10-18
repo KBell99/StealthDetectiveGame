@@ -21,26 +21,62 @@ AStealthDoor::AStealthDoor()
 void AStealthDoor::BeginPlay()
 {
 	Super::BeginPlay();
-	
+}
+
+void AStealthDoor::DoorAnimationFinished()
+{
+	bIsAnimating = false;
+	// clear timer in case it's reused
+	if (GetWorld())
+	{
+		GetWorld()->GetTimerManager().ClearTimer(AnimationTimerHandle);
+	}
 }
 
 void AStealthDoor::OnInteract()
 {
 	if (bIsDoorOpen)
 	{
-		if (DoorCloseAnimation)
+		if (DoorCloseAnimation && !bIsAnimating)
 		{
+			bIsAnimating = true;
 			DoorMesh->PlayAnimation(DoorCloseAnimation, false);
+
+			if (GetWorld())
+			{
+				const float Length = DoorCloseAnimation->GetPlayLength();
+				if (Length > KINDA_SMALL_NUMBER)
+				{
+					GetWorld()->GetTimerManager().SetTimer(AnimationTimerHandle, this, &AStealthDoor::DoorAnimationFinished, Length, false);
+				}
+				else
+				{
+					DoorAnimationFinished();
+				}
+			}
 			bIsDoorOpen = false;
 		}
 	}
 	else
 	{
-		if (DoorOpenAnimation)
+		if (DoorOpenAnimation && !bIsAnimating)
 		{
+			bIsAnimating = true;
 			DoorMesh->PlayAnimation(DoorOpenAnimation, false);
+
+			if (GetWorld())
+			{
+				const float Length = DoorOpenAnimation->GetPlayLength();
+				if (Length > KINDA_SMALL_NUMBER)
+				{
+					GetWorld()->GetTimerManager().SetTimer(AnimationTimerHandle, this, &AStealthDoor::DoorAnimationFinished, Length, false);
+				}
+				else
+				{
+					DoorAnimationFinished();
+				}
+			}
 			bIsDoorOpen = true;
 		}
 	}
 }
-
