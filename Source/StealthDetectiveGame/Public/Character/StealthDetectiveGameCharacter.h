@@ -9,6 +9,7 @@
 #include "Logging/LogMacros.h"
 #include "StealthDetectiveGameCharacter.generated.h"
 
+class UTimelineComponent;
 class UAIPerceptionStimuliSourceComponent;
 class AStealthEvidence;
 class USpringArmComponent;
@@ -20,6 +21,10 @@ DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
 
 DECLARE_MULTICAST_DELEGATE_OneParam(FEvidenceFound, FGameplayTag /*EvidenceTag*/);
 DECLARE_MULTICAST_DELEGATE_OneParam(FActiveTrail, bool /*bHasActiveTrail*/);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FCameraToggle, bool, bIsCameraEnabled);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FCameraFlashToggle, bool, bIsCameraFlashEnabled);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FFlashPictureTaken, float, FlashCooldownTime);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FDetectiveScanTimer, float, ScanDuration);
 
 /**
  *  A simple player-controllable third person character
@@ -49,6 +54,12 @@ class AStealthDetectiveGameCharacter : public AStealthCharacterBase
 	FVector FlashBoxExtent = FVector(200.0f, 200.0f, 200.0f);
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Photo", meta = (AllowPrivateAccess = "true"))
 	float FlashTraceEnd = 200.0f;
+
+	// initialize flash cooldown members (default already set on declaration, reaffirm here)
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Photo", meta = (AllowPrivateAccess = "true"))
+	float FlashCooldown = 0.f;
+	float LastFlashTime = -10000.f;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Photo", meta = (AllowPrivateAccess = "true"))
 	TScriptInterface<IBlendableInterface> DetectiveModePostProcessMaterial;
@@ -119,13 +130,17 @@ protected:
 	void Move(const FInputActionValue& Value);
 	void Look(const FInputActionValue& Value);
 	void DoCrouch(const FInputActionValue& Value);
+
+	UFUNCTION(BlueprintCallable)
 	void EnableCamera();
 	void ZoomInCamera(const FInputActionValue& Value);
 	void ZoomOutCamera(const FInputActionValue& Value);
 	void TakePicture();
+
+	UFUNCTION(BlueprintCallable)
 	void EnableCameraFlash();
 	void EnableDetectiveMode();
-	void StartScanning();
+	void StartScanning(const FInputActionValue& Value);
 	void EvidenceScanned();
 	void Interact();
 
@@ -150,7 +165,20 @@ public:
 	
 	FEvidenceFound OnEvidenceFound;
 	FActiveTrail OnActiveTrail;
+	UPROPERTY(BlueprintAssignable, Category="Event|Input")
+	FCameraToggle OnCameraToggle;
+	UPROPERTY(BlueprintAssignable, Category="Event|Input")
+	FCameraFlashToggle OnCameraFlashToggle;
+	UPROPERTY(BlueprintAssignable, Category="Event|Photo")
+	FFlashPictureTaken OnFlashPictureTaken;
+	UPROPERTY(BlueprintAssignable, Category="Event|Detective")
+	FDetectiveScanTimer OnDetectiveScan;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Default|Timeline")
+	UTimelineComponent* FlashCooldownTimeline;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Default|Timeline")
+	UTimelineComponent* ScanTimeline;
+	
 	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
 

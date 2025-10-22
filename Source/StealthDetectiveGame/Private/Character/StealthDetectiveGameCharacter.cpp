@@ -174,7 +174,10 @@ void AStealthDetectiveGameCharacter::EnableCamera()
 			ToggleCamera();
 			bUseControllerRotationYaw = false;
 			bIsCameraEnabled = false;
+			bIsCameraFlashEnabled = false;
 		}
+
+		OnCameraToggle.Broadcast(bIsCameraEnabled);
 	}
 }
 
@@ -213,6 +216,7 @@ void AStealthDetectiveGameCharacter::TakePicture()
 void AStealthDetectiveGameCharacter::EnableCameraFlash()
 {
 	bIsCameraFlashEnabled = !bIsCameraFlashEnabled;
+	OnCameraFlashToggle.Broadcast(bIsCameraFlashEnabled);
 }
 
 AStealthEvidence* AStealthDetectiveGameCharacter::EvidenceInView() const
@@ -274,6 +278,19 @@ AStealthEvidence* AStealthDetectiveGameCharacter::EvidenceInView() const
 void AStealthDetectiveGameCharacter::FlashPhotography()
 {
 	if (!PhotoCamera) return;
+	if (!GetWorld()) return;
+
+	const float Now = GetWorld()->GetTimeSeconds();
+	if (Now - LastFlashTime < FlashCooldown)
+	{
+		// Cooldown not finished: do nothing
+		UE_LOG(LogStealthDetectiveGame, Verbose, TEXT("Flash on cooldown. Wait %.2f seconds."),
+			   FlashCooldown - (Now - LastFlashTime));
+		return;
+	}
+
+	// Update last flash time and proceed
+	LastFlashTime = Now;
 
 	FVector CameraLocation = PhotoCamera->GetComponentLocation();
 	FVector ForwardVector = PhotoCamera->GetForwardVector();
@@ -306,6 +323,8 @@ void AStealthDetectiveGameCharacter::FlashPhotography()
 			return;
 		}
 	}
+	
+	OnFlashPictureTaken.Broadcast(FlashCooldown);
 }
 
 void AStealthDetectiveGameCharacter::EnableDetectiveMode()
@@ -360,10 +379,20 @@ void AStealthDetectiveGameCharacter::EnableDetectiveMode()
 	}
 }
 
-void AStealthDetectiveGameCharacter::StartScanning()
+void AStealthDetectiveGameCharacter::StartScanning(const FInputActionValue& Value)
 {
 	if (!bIsThirdPerson)
 	{
+		float HoldTime = 2.0f;
+		for (UInputTrigger* Trigger : EvidenceScanAction->Triggers)
+		{
+			if (UInputTriggerHold* HoldTrigger = Cast<UInputTriggerHold>(Trigger))
+			{
+				HoldTime = HoldTrigger->HoldTimeThreshold;
+				break;
+			}
+		}
+		OnDetectiveScan.Broadcast(HoldTime);
 	}
 }
 
