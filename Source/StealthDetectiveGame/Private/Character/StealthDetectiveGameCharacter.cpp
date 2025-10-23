@@ -2,6 +2,7 @@
 
 #include "Character/StealthDetectiveGameCharacter.h"
 
+#include "AudioMixerBlueprintLibrary.h"
 #include "Engine/LocalPlayer.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
@@ -19,6 +20,7 @@
 #include "Interface/Interactable.h"
 #include "Objective/StealthTrailStart.h"
 #include "Perception/AIPerceptionStimuliSourceComponent.h"
+#include "UI/StealthHUD.h"
 
 
 // Construction and Input Setup
@@ -93,6 +95,9 @@ void AStealthDetectiveGameCharacter::SetupPlayerInputComponent(UInputComponent* 
 
 		EnhancedInputComponent->BindAction(InteractAction, ETriggerEvent::Triggered, this,
 		                                   &AStealthDetectiveGameCharacter::Interact);
+
+		EnhancedInputComponent->BindAction(OpenSettingsAction, ETriggerEvent::Triggered, this,
+		                                   &AStealthDetectiveGameCharacter::OpenSettings);
 
 		//Camera
 		EnhancedInputComponent->BindAction(EnableCameraAction, ETriggerEvent::Triggered, this,
@@ -285,7 +290,7 @@ void AStealthDetectiveGameCharacter::FlashPhotography()
 	{
 		// Cooldown not finished: do nothing
 		UE_LOG(LogStealthDetectiveGame, Verbose, TEXT("Flash on cooldown. Wait %.2f seconds."),
-			   FlashCooldown - (Now - LastFlashTime));
+		       FlashCooldown - (Now - LastFlashTime));
 		return;
 	}
 
@@ -323,7 +328,7 @@ void AStealthDetectiveGameCharacter::FlashPhotography()
 			return;
 		}
 	}
-	
+
 	OnFlashPictureTaken.Broadcast(FlashCooldown);
 }
 
@@ -437,6 +442,16 @@ void AStealthDetectiveGameCharacter::Interact()
 			UE_LOG(LogStealthDetectiveGame, Log, TEXT("Interacted with: %s"), *Actor->GetName());
 			return;
 		}
+	}
+}
+
+void AStealthDetectiveGameCharacter::OpenSettings()
+{
+	if (AStealthDetectiveGamePlayerController* PlayerController = Cast<AStealthDetectiveGamePlayerController>(GetController()))
+	{
+		AStealthHUD* HUD = Cast<AStealthHUD>(PlayerController->GetHUD());
+
+		HUD->ShowSettingsMenu(PlayerController);
 	}
 }
 

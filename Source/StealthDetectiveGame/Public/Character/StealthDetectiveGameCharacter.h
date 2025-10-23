@@ -69,6 +69,7 @@ class AStealthDetectiveGameCharacter : public AStealthCharacterBase
 	
 	bool bIsCameraEnabled = false;
 	bool bDetectiveMode = false;
+	bool bMenuIsOpen = false;
 
 	UPROPERTY(BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 	bool bIsThirdPerson = true;
@@ -101,6 +102,9 @@ protected:
 
 	UPROPERTY(EditAnywhere, Category="Input|Default")
 	UInputAction* InteractAction;
+
+	UPROPERTY(EditAnywhere, Category="Input|Default")
+	UInputAction* OpenSettingsAction;
 	
 	UPROPERTY(EditAnywhere, Category="Input|Camera")
 	UInputAction* ZoomInAction;
@@ -130,7 +134,9 @@ protected:
 	void Move(const FInputActionValue& Value);
 	void Look(const FInputActionValue& Value);
 	void DoCrouch(const FInputActionValue& Value);
-
+	void Interact();
+	void OpenSettings();
+	
 	UFUNCTION(BlueprintCallable)
 	void EnableCamera();
 	void ZoomInCamera(const FInputActionValue& Value);
@@ -142,7 +148,7 @@ protected:
 	void EnableDetectiveMode();
 	void StartScanning(const FInputActionValue& Value);
 	void EvidenceScanned();
-	void Interact();
+
 
 	void FlashPhotography();
 	

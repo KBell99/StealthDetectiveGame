@@ -17,4 +17,15 @@ class STEALTHDETECTIVEGAME_API AStealthHUD : public AHUD
 public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Defaults|Widgets")
 	UUserWidget* CameraOverlay;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Defaults|Widgets")
+	TSubclassOf<UUserWidget> SettingsMenuClass;
+
+	UPROPERTY(BlueprintReadWrite, Category="Defaults|Widgets")
+	UUserWidget* SettingsMenu;
+
+	UFUNCTION(BlueprintCallable, Category="Defaults|Widgets")
+	void ShowSettingsMenu(APlayerController* PlayerController);
+	UFUNCTION(BlueprintCallable, Category="Defaults|Widgets")
+	void HideSettingsMenu(APlayerController* PlayerController);
 };
