@@ -438,7 +438,7 @@ void AStealthDetectiveGameCharacter::Interact()
 
 		if (IInteractable* Interactable = Cast<IInteractable>(Actor))
 		{
-			Interactable->OnInteract();
+			Interactable->OnInteract(this);
 			UE_LOG(LogStealthDetectiveGame, Log, TEXT("Interacted with: %s"), *Actor->GetName());
 			return;
 		}

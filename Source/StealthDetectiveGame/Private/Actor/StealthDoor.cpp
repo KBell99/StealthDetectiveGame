@@ -17,12 +17,6 @@ AStealthDoor::AStealthDoor()
 	InteractableCollider->SetupAttachment(RootComponent);
 }
 
-// Called when the game starts or when spawned
-void AStealthDoor::BeginPlay()
-{
-	Super::BeginPlay();
-}
-
 void AStealthDoor::DoorAnimationFinished()
 {
 	bIsAnimating = false;
@@ -33,7 +27,7 @@ void AStealthDoor::DoorAnimationFinished()
 	}
 }
 
-void AStealthDoor::OnInteract()
+void AStealthDoor::OnInteract(APawn* InteractingPawn)
 {
 	if (bIsDoorOpen)
 	{

@@ -17,9 +17,6 @@ class STEALTHDETECTIVEGAME_API AStealthDoor : public AActor, public IInteractabl
 
 
 protected:
-	// Called when the game starts or when spawned
-	virtual void BeginPlay() override;
-
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Components")
 	USkeletalMeshComponent* DoorMesh;
@@ -46,7 +43,7 @@ public:
 	AStealthDoor();
 
 	UFUNCTION(BlueprintCallable)
-	virtual void OnInteract() override;
+	virtual void OnInteract(APawn* InteractingPawn) override;
 
 	virtual void DoorAnimationFinished();
 };

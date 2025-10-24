@@ -23,5 +23,5 @@ class STEALTHDETECTIVEGAME_API IInteractable
 	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
 public:
 	UFUNCTION(BlueprintCallable, Category="Interaction")
-	virtual void OnInteract() = 0;
+	virtual void OnInteract(APawn* InteractingPawn) = 0;
 };

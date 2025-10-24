@@ -3,6 +3,7 @@
 
 #include "UI/StealthHUD.h"
 
+#include "GameplayTagContainer.h"
 #include "Blueprint/UserWidget.h"
 #include "Blueprint/WidgetBlueprintLibrary.h"
 
@@ -37,5 +38,3 @@ void AStealthHUD::HideSettingsMenu(APlayerController* PlayerController)
 
 	PlayerController->bShowMouseCursor = false;
 }
-
-
