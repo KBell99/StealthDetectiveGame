@@ -42,8 +42,12 @@ void AStealthDetectiveGameGameMode::BeginPlay()
 
 	AStealthDetectiveGameCharacter* PlayerCharacter = Cast<AStealthDetectiveGameCharacter>(UGameplayStatics::GetPlayerCharacter(this, 0));
 
-	PlayerCharacter->OnEvidenceFound.AddUObject(this, &AStealthDetectiveGameGameMode::SetActiveTrailTag);
-	PlayerCharacter->OnActiveTrail.AddUObject(this, &AStealthDetectiveGameGameMode::SetActiveTrailVisibility);
+	if (PlayerCharacter)
+	{
+		PlayerCharacter->OnEvidenceFound.AddUObject(this, &AStealthDetectiveGameGameMode::SetActiveTrailTag);
+		PlayerCharacter->OnActiveTrail.AddUObject(this, &AStealthDetectiveGameGameMode::SetActiveTrailVisibility);
+	}
+	
 }
 
 AStealthDetectiveGameGameMode::AStealthDetectiveGameGameMode()
