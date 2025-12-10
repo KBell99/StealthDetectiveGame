@@ -19,12 +19,12 @@ struct FInputActionValue;
 
 DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
 
-DECLARE_MULTICAST_DELEGATE_OneParam(FEvidenceFound, FGameplayTag /*EvidenceTag*/);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FEvidenceFound, FGameplayTag, EvidenceTag);
 DECLARE_MULTICAST_DELEGATE_OneParam(FActiveTrail, bool /*bHasActiveTrail*/);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FCameraToggle, bool, bIsCameraEnabled);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FCameraFlashToggle, bool, bIsCameraFlashEnabled);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FFlashPictureTaken, float, FlashCooldownTime);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FDetectiveScanTimer, float, ScanDuration);
+DECLARE_MULTICAST_DELEGATE_OneParam(FPlayerDead, AStealthDetectiveGameCharacter* /*DeadCharacter*/);
 
 /**
  *  A simple player-controllable third person character
@@ -44,6 +44,7 @@ class AStealthDetectiveGameCharacter : public AStealthCharacterBase
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components", meta = (AllowPrivateAccess = "true"))
 	UCameraComponent* PhotoCamera;
+	
 
 	// Collider and State Variables
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Photo", meta = (AllowPrivateAccess = "true"))
@@ -63,6 +64,8 @@ class AStealthDetectiveGameCharacter : public AStealthCharacterBase
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Photo", meta = (AllowPrivateAccess = "true"))
 	TScriptInterface<IBlendableInterface> DetectiveModePostProcessMaterial;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Photo", meta = (AllowPrivateAccess = "true"))
+	TScriptInterface<IBlendableInterface> NoirCameraPostProcessMaterial;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="AI", meta = (AllowPrivateAccess = "true"))
 	UAIPerceptionStimuliSourceComponent* PerceptionStimuliSourceComponent;
@@ -75,6 +78,11 @@ class AStealthDetectiveGameCharacter : public AStealthCharacterBase
 	bool bIsThirdPerson = true;
 	
 	bool bIsCameraFlashEnabled = false;
+	UFUNCTION(BlueprintCallable)
+	bool GetIsCameraFlashEnabled() const { return bIsCameraFlashEnabled; }
+	UFUNCTION(BlueprintCallable)
+	void SetIsCameraFlashEnabled(bool bEnabled) { bIsCameraFlashEnabled = bEnabled; }
+	
 	bool bHasActiveTrail = false;
 
 	AStealthEvidence* EvidenceInView() const;
@@ -146,8 +154,9 @@ protected:
 	UFUNCTION(BlueprintCallable)
 	void EnableCameraFlash();
 	void EnableDetectiveMode();
-	void StartScanning(const FInputActionValue& Value);
 	void EvidenceScanned();
+	UFUNCTION(BlueprintNativeEvent)
+	void CameraFlash();
 
 
 	void FlashPhotography();
@@ -168,26 +177,25 @@ public:
 
 	virtual void Stun(float HitDistance = 0.f) override;
 	virtual void HandleDeath();
+
 	
+	UPROPERTY(BlueprintCallable)
 	FEvidenceFound OnEvidenceFound;
 	FActiveTrail OnActiveTrail;
+	FPlayerDead OnPlayerDead;
 	UPROPERTY(BlueprintAssignable, Category="Event|Input")
 	FCameraToggle OnCameraToggle;
 	UPROPERTY(BlueprintAssignable, Category="Event|Input")
 	FCameraFlashToggle OnCameraFlashToggle;
 	UPROPERTY(BlueprintAssignable, Category="Event|Photo")
 	FFlashPictureTaken OnFlashPictureTaken;
-	UPROPERTY(BlueprintAssignable, Category="Event|Detective")
-	FDetectiveScanTimer OnDetectiveScan;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Default|Timeline")
-	UTimelineComponent* FlashCooldownTimeline;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Default|Timeline")
-	UTimelineComponent* ScanTimeline;
 	
 	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
 
 	UFUNCTION(BlueprintImplementableEvent)
 	void ToggleCamera();
+
+	UPROPERTY(BlueprintReadOnly, Category="State")
+	bool bCanFlash = false;
 };

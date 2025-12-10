@@ -38,3 +38,7 @@ void AStealthHUD::HideSettingsMenu(APlayerController* PlayerController)
 
 	PlayerController->bShowMouseCursor = false;
 }
+
+void AStealthHUD::ShowDeathScreen_Implementation()
+{
+}

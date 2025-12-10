@@ -25,6 +25,7 @@ public:
 	
 	bool EnableMappingContext(FName ContextName);
 	bool DisableMappingContext(FName ContextName);
+	void RemoveDefaultMappingContexts();
 	
 protected:
 
@@ -51,7 +52,4 @@ protected:
 
 	/** Input mapping context setup */
 	virtual void SetupInputComponent() override;
-
-	
-
 };

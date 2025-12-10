@@ -20,8 +20,10 @@ AStealthDocument::AStealthDocument()
 	InteractableCollider->SetupAttachment(RootComponent);
 }
 
-void AStealthDocument::OnInteract(APawn* InteractingPawn)
+void AStealthDocument::OnInteract_Implementation(APawn* InteractingPawn)
 {
+	IInteractable::OnInteract_Implementation(InteractingPawn);
+
 	if (AStealthDetectiveGameCharacter* PlayerCharacter = Cast<AStealthDetectiveGameCharacter>(InteractingPawn))
 	{
 		if (AStealthDetectiveGamePlayerController* PlayerController = Cast<AStealthDetectiveGamePlayerController>(PlayerCharacter->GetController()))
@@ -32,6 +34,6 @@ void AStealthDocument::OnInteract(APawn* InteractingPawn)
 			}
 		}
 	}
-	
 }
+
 

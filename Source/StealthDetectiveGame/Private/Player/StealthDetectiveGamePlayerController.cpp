@@ -33,6 +33,21 @@ void AStealthDetectiveGamePlayerController::RemoveInputMappingContext(UInputMapp
 	}
 }
 
+
+void AStealthDetectiveGamePlayerController::RemoveDefaultMappingContexts()
+{
+	if (IsLocalPlayerController())
+	{
+		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(GetLocalPlayer()))
+		{
+			for (UInputMappingContext* CurrentContext : DefaultMappingContexts)
+			{
+				RemoveInputMappingContext(CurrentContext);
+			}
+		}
+	}
+}
+
 void AStealthDetectiveGamePlayerController::BeginPlay()
 {
 	Super::BeginPlay();
@@ -55,6 +70,9 @@ void AStealthDetectiveGamePlayerController::BeginPlay()
 		}
 
 	}
+
+	FInputModeGameOnly InputMode;
+	SetInputMode(InputMode);
 }
 
 void AStealthDetectiveGamePlayerController::SetupInputComponent()
@@ -98,4 +116,5 @@ bool AStealthDetectiveGamePlayerController::DisableMappingContext(FName ContextN
 	
 	return false;
 }
+
 

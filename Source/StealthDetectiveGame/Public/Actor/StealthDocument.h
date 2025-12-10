@@ -32,6 +32,6 @@ public:
 	AStealthDocument();
 
 	UFUNCTION(BlueprintCallable)
-	virtual void OnInteract(APawn* InteractingPawn) override;
+	virtual void OnInteract_Implementation(APawn* InteractingPawn) override;
 
 };

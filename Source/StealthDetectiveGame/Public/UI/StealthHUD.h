@@ -60,4 +60,7 @@ public:
 
 	UFUNCTION(BlueprintImplementableEvent, Category="Defaults|Widgets")
 	void ShowDocument(FGameplayTag GameplayTag);
+
+	UFUNCTION(BlueprintNativeEvent, Category="Defaults|Widgets")
+	void ShowDeathScreen();
 };

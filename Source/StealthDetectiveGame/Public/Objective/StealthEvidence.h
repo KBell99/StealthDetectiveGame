@@ -8,6 +8,8 @@
 #include "Interface/Scannable.h"
 #include "StealthEvidence.generated.h"
 
+class AStealthDetectiveGameCharacter;
+
 UCLASS()
 class STEALTHDETECTIVEGAME_API AStealthEvidence : public AActor
 {
@@ -29,5 +31,8 @@ protected:
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
+	
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="Gameplay")
+	void OnEvidencePhotographed(AStealthDetectiveGameCharacter* PhotographingCharacter);
 
 };

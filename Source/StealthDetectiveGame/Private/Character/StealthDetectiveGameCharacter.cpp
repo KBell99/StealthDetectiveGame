@@ -114,8 +114,6 @@ void AStealthDetectiveGameCharacter::SetupPlayerInputComponent(UInputComponent* 
 		EnhancedInputComponent->BindAction(EnableDetectiveModeAction, ETriggerEvent::Triggered, this,
 		                                   &AStealthDetectiveGameCharacter::EnableDetectiveMode);
 
-		EnhancedInputComponent->BindAction(EvidenceScanAction, ETriggerEvent::Started, this,
-		                                   &AStealthDetectiveGameCharacter::StartScanning);
 		EnhancedInputComponent->BindAction(EvidenceScanAction, ETriggerEvent::Triggered, this,
 		                                   &AStealthDetectiveGameCharacter::EvidenceScanned);
 	}
@@ -184,6 +182,7 @@ void AStealthDetectiveGameCharacter::EnableCamera()
 			bUseControllerRotationYaw = false;
 			bIsCameraEnabled = false;
 			bIsCameraFlashEnabled = false;
+			OnCameraFlashToggle.Broadcast(bIsCameraFlashEnabled);
 		}
 
 		OnCameraToggle.Broadcast(bIsCameraEnabled);
@@ -202,23 +201,15 @@ void AStealthDetectiveGameCharacter::ZoomOutCamera(const FInputActionValue& Valu
 
 void AStealthDetectiveGameCharacter::TakePicture()
 {
-	AStealthEvidence* Evidence = EvidenceInView();
-	if (Evidence && Evidence->GameplayTags.HasTag(FGameplayTag::RequestGameplayTag("Evidence.Objective")))
-	{
-		for (const FGameplayTag& Tag : Evidence->GameplayTags.GetGameplayTagArray())
-		{
-			if (Tag.MatchesTag(FGameplayTag::RequestGameplayTag("Evidence.Objective")))
-			{
-				UE_LOG(LogStealthDetectiveGame, Log, TEXT("Objective Evidence Found: %s"), *Tag.ToString());
-				OnEvidenceFound.Broadcast(Tag);
-				return;
-			}
-		}
-	}
-
 	if (bIsCameraFlashEnabled)
 	{
 		FlashPhotography();
+	}
+	
+	AStealthEvidence* Evidence = EvidenceInView();
+	if (Evidence && Evidence->GameplayTags.HasTag(FGameplayTag::RequestGameplayTag("Evidence.Objective")))
+	{
+		Evidence->OnEvidencePhotographed(this);
 	}
 }
 
@@ -274,6 +265,11 @@ AStealthEvidence* AStealthDetectiveGameCharacter::EvidenceInView() const
 			UE_LOG(LogStealthDetectiveGame, Log, TEXT("Visibility Hit Actor: %s"),
 			       *GetNameSafe(VisibilityHit.GetActor()));
 
+			if (VisibilityHit.GetActor() == nullptr)
+			{
+				return nullptr;
+			}
+			
 			if (VisibilityHit.GetActor()->GetClass() == Evidence->GetClass())
 			{
 				return Evidence; // Stop after finding the first visible evidence
@@ -293,11 +289,13 @@ void AStealthDetectiveGameCharacter::FlashPhotography()
 	if (Now - LastFlashTime < FlashCooldown)
 	{
 		// Cooldown not finished: do nothing
+		bCanFlash = false;
 		UE_LOG(LogStealthDetectiveGame, Verbose, TEXT("Flash on cooldown. Wait %.2f seconds."),
 		       FlashCooldown - (Now - LastFlashTime));
 		return;
 	}
 
+	bCanFlash = true;
 	// Update last flash time and proceed
 	LastFlashTime = Now;
 
@@ -329,9 +327,11 @@ void AStealthDetectiveGameCharacter::FlashPhotography()
 		{
 			Enemy->Stun();
 			UE_LOG(LogStealthDetectiveGame, Log, TEXT("Enemy Stunned: %s"), *Enemy->GetName());
-			return;
+			break;
 		}
 	}
+
+	CameraFlash();
 
 	OnFlashPictureTaken.Broadcast(FlashCooldown);
 }
@@ -352,10 +352,12 @@ void AStealthDetectiveGameCharacter::EnableDetectiveMode()
 				if (PhotoCamera)
 				{
 					PhotoCamera->PostProcessSettings.AddBlendable(DetectiveModePostProcessMaterial, 1.0f);
+					PhotoCamera->PostProcessSettings.RemoveBlendable(NoirCameraPostProcessMaterial);
 				}
 				if (FollowCamera)
 				{
 					FollowCamera->PostProcessSettings.AddBlendable(DetectiveModePostProcessMaterial, 1.0f);
+					FollowCamera->PostProcessSettings.RemoveBlendable(NoirCameraPostProcessMaterial);
 				}
 			}
 			if (bHasActiveTrail)
@@ -374,10 +376,12 @@ void AStealthDetectiveGameCharacter::EnableDetectiveMode()
 				if (PhotoCamera)
 				{
 					PhotoCamera->PostProcessSettings.RemoveBlendable(DetectiveModePostProcessMaterial);
+					PhotoCamera->PostProcessSettings.AddBlendable(NoirCameraPostProcessMaterial, 1.0f);
 				}
 				if (FollowCamera)
 				{
 					FollowCamera->PostProcessSettings.RemoveBlendable(DetectiveModePostProcessMaterial);
+					FollowCamera->PostProcessSettings.AddBlendable(NoirCameraPostProcessMaterial, 1.0f);
 				}
 			}
 			if (bHasActiveTrail)
@@ -388,22 +392,6 @@ void AStealthDetectiveGameCharacter::EnableDetectiveMode()
 	}
 }
 
-void AStealthDetectiveGameCharacter::StartScanning(const FInputActionValue& Value)
-{
-	if (!bIsThirdPerson)
-	{
-		float HoldTime = 2.0f;
-		for (UInputTrigger* Trigger : EvidenceScanAction->Triggers)
-		{
-			if (UInputTriggerHold* HoldTrigger = Cast<UInputTriggerHold>(Trigger))
-			{
-				HoldTime = HoldTrigger->HoldTimeThreshold;
-				break;
-			}
-		}
-		OnDetectiveScan.Broadcast(HoldTime);
-	}
-}
 
 void AStealthDetectiveGameCharacter::EvidenceScanned()
 {
@@ -431,6 +419,10 @@ void AStealthDetectiveGameCharacter::EvidenceScanned()
 	}
 }
 
+void AStealthDetectiveGameCharacter::CameraFlash_Implementation()
+{
+}
+
 void AStealthDetectiveGameCharacter::Interact()
 {
 	TArray<AActor*> OverlappingActors;
@@ -440,9 +432,9 @@ void AStealthDetectiveGameCharacter::Interact()
 	{
 		if (!Actor) continue;
 
-		if (IInteractable* Interactable = Cast<IInteractable>(Actor))
+		if (Actor->GetClass()->ImplementsInterface(UInteractable::StaticClass()))
 		{
-			Interactable->OnInteract(this);
+			IInteractable::Execute_OnInteract(Actor, this);
 			UE_LOG(LogStealthDetectiveGame, Log, TEXT("Interacted with: %s"), *Actor->GetName());
 			return;
 		}
@@ -506,7 +498,8 @@ void AStealthDetectiveGameCharacter::DoJumpEnd()
 void AStealthDetectiveGameCharacter::Stun(float HitDistance)
 {
 	Super::Stun(HitDistance);
-
+	
+	OnPlayerDead.Broadcast(this);
 	HandleDeath();
 }
 
@@ -529,4 +522,15 @@ void AStealthDetectiveGameCharacter::HandleDeath()
 	FollowCamera->DetachFromComponent(FDetachmentTransformRules::KeepWorldTransform);
 
 	bUseControllerRotationYaw = false;
+
+	if (AStealthDetectiveGamePlayerController* MyController = Cast<AStealthDetectiveGamePlayerController>(GetController()))
+	{
+		MyController->RemoveDefaultMappingContexts();
+		if (AStealthHUD* HUD = Cast<AStealthHUD>(MyController->GetHUD()))
+		{
+			HUD->ShowDeathScreen();
+		}
+	}
+
+	
 }

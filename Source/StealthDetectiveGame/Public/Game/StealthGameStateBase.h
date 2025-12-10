@@ -25,10 +25,19 @@ private:
 	UPROPERTY(EditAnywhere, Category="Objective", meta=(AllowPrivateAccess="true"))
 	FGameplayTag ActiveTrailTag;
 
+	UPROPERTY(EditAnywhere, Category="Objective", meta=(AllowPrivateAccess="true"))
+	TMap<FGameplayTag, bool> ObjectiveCompletionMap;
+	
 public:
 	virtual void PostInitializeComponents() override;
 
 	TMap<FName, AStealthTrailMarkerManager*> GetTrails() { return Trails; }
 	FGameplayTag GetActiveTrailTag() const { return ActiveTrailTag; }
 	void SetActiveTrailTag(FGameplayTag NewActiveTrailTag) { ActiveTrailTag = NewActiveTrailTag; }
+
+	bool IsObjectiveCompleted(FGameplayTag ObjectiveName) const;
+	void SetObjectiveCompleted(FGameplayTag ObjectiveName, bool bCompleted);
+
+	bool AllObjectivesCompleted();
+	
 };

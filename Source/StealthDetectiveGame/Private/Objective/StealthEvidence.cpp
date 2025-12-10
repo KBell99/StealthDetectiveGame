@@ -3,6 +3,9 @@
 
 #include "Objective/StealthEvidence.h"
 
+#include "StealthDetectiveGame.h"
+#include "Character/StealthDetectiveGameCharacter.h"
+
 // Sets default values
 AStealthEvidence::AStealthEvidence()
 {
@@ -22,6 +25,19 @@ void AStealthEvidence::BeginPlay()
 void AStealthEvidence::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
+}
+
+void AStealthEvidence::OnEvidencePhotographed_Implementation(AStealthDetectiveGameCharacter* PhotographingCharacter)
+{
+	for (const FGameplayTag& Tag : GameplayTags.GetGameplayTagArray())
+	{
+		if (Tag.MatchesTag(FGameplayTag::RequestGameplayTag("Evidence.Objective")))
+		{
+			UE_LOG(LogStealthDetectiveGame, Log, TEXT("Objective Evidence Found: %s"), *Tag.ToString());
+			PhotographingCharacter->OnEvidenceFound.Broadcast(Tag);
+		}
+	}
 
 }
 

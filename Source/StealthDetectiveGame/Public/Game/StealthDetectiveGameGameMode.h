@@ -7,6 +7,7 @@
 #include "GameFramework/GameModeBase.h"
 #include "StealthDetectiveGameGameMode.generated.h"
 
+class AStealthDetectiveGameCharacter;
 /**
  *  Simple GameMode for a third person game
  */
@@ -14,17 +15,43 @@ UCLASS(abstract)
 class AStealthDetectiveGameGameMode : public AGameModeBase
 {
 	GENERATED_BODY()
-	
-	void SetActiveTrailVisibility(bool bVisible);
-	void SetActiveTrailTag(FGameplayTag NewActiveTrailTag);
 
+	UFUNCTION()
+	void SetActiveTrailVisibility(bool bVisible);
+
+	UFUNCTION()
+	void EvidenceFound(FGameplayTag EvidenceTag);
+
+	UAudioComponent* BGMComponent;
 	
 public:
 	
-	/** Constructor */
-	AStealthDetectiveGameGameMode();
-
 	virtual void BeginPlay() override;
+
+	UFUNCTION()
+	void SetActiveTrailTag(FGameplayTag NewActiveTrailTag);
+	
+	void CheckObjectiveCompletion(FGameplayTag ObjectiveTag);
+
+	void PlayerDied(AStealthDetectiveGameCharacter* DeadCharacter);
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Sound")
+	USoundBase* EvidenceFoundSound;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Sound")
+	USoundBase* PlayerDeathSound;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Sound")
+	USoundBase* BackgroundMusic;
+	
+
+	UPROPERTY(EditDefaultsOnly)
+	TSoftObjectPtr<UWorld> GameEndingMap;
+	
+	void TravelToMap(const FString& MapName);
+	
+	UPROPERTY(EditDefaultsOnly)
+	TMap<FString, TSoftObjectPtr<UWorld>> Maps;
+
+	
 };
 
 

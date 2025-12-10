@@ -23,3 +23,38 @@ void AStealthGameStateBase::PostInitializeComponents()
 		}
 	}
 }
+
+bool AStealthGameStateBase::IsObjectiveCompleted(FGameplayTag ObjectiveName) const
+{
+	if (ObjectiveCompletionMap.Contains(ObjectiveName))
+	{
+		return *ObjectiveCompletionMap.Find(ObjectiveName);
+	}
+	
+	return false;
+}
+
+void AStealthGameStateBase::SetObjectiveCompleted(FGameplayTag ObjectiveName, bool bCompleted)
+{
+	ObjectiveCompletionMap.Add(ObjectiveName, bCompleted);
+}
+
+bool AStealthGameStateBase::AllObjectivesCompleted()
+{
+	TArray<bool> ObjectiveCompletionMapValues;
+	ObjectiveCompletionMap.GenerateValueArray(ObjectiveCompletionMapValues);
+	if (ObjectiveCompletionMapValues.Num() == 0)
+	{
+		return false;
+	}
+	
+	for (bool bCompleted : ObjectiveCompletionMapValues)
+	{
+		if (!bCompleted)
+		{
+			return false;
+		}
+	}
+
+	return true;
+}

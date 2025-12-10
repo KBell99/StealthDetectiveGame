@@ -7,7 +7,7 @@
 #include "Interactable.generated.h"
 
 // This class does not need to be modified.
-UINTERFACE(MinimalAPI, NotBlueprintable)
+UINTERFACE(MinimalAPI, Blueprintable)
 class UInteractable : public UInterface
 {
 	GENERATED_BODY()
@@ -22,6 +22,6 @@ class STEALTHDETECTIVEGAME_API IInteractable
 
 	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
 public:
-	UFUNCTION(BlueprintCallable, Category="Interaction")
-	virtual void OnInteract(APawn* InteractingPawn) = 0;
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category="Interaction")
+	void OnInteract(APawn* InteractingPawn);
 };
