@@ -52,7 +52,13 @@ public:
 
 	UPROPERTY(BlueprintReadWrite, Category="Defaults|Widgets")
 	UUserWidget* SettingsMenu;
-
+	
+	UPROPERTY(EditDefaultsOnly, Category="Defaults|Widgets")
+	TSubclassOf<UUserWidget> StoryMenuClass;
+	
+	UPROPERTY(BlueprintReadOnly, Category="Defaults|Widgets")
+	UUserWidget* StoryMenu;
+	
 	UFUNCTION(BlueprintCallable, Category="Defaults|Widgets")
 	void ShowSettingsMenu(APlayerController* PlayerController);
 	UFUNCTION(BlueprintCallable, Category="Defaults|Widgets")
@@ -63,4 +69,7 @@ public:
 
 	UFUNCTION(BlueprintNativeEvent, Category="Defaults|Widgets")
 	void ShowDeathScreen();
+	
+	UFUNCTION(BlueprintCallable, Category="Defaults|Widgets")
+	void ShowStoryScreen(APlayerController* PlayerController);
 };

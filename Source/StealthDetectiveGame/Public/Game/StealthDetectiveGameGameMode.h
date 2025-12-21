@@ -27,6 +27,12 @@ class AStealthDetectiveGameGameMode : public AGameModeBase
 public:
 	
 	virtual void BeginPlay() override;
+	
+	virtual void ShowStoryScreen(AStealthDetectiveGameCharacter* PlayerCharacter);
+	
+	UFUNCTION(BlueprintCallable)
+	virtual void StartGame();
+	
 
 	UFUNCTION()
 	void SetActiveTrailTag(FGameplayTag NewActiveTrailTag);

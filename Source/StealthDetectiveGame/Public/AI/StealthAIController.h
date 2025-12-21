@@ -13,7 +13,7 @@ struct FStunDuration
 	GENERATED_BODY();
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Default")
-	float Duration;
+	float Duration = 0;
 };
 
 USTRUCT(BlueprintType)

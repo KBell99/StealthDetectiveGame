@@ -15,6 +15,9 @@ class STEALTHDETECTIVEGAME_API UStealthGameInstance : public UGameInstance
 	GENERATED_BODY()
 
 public:
-	UPROPERTY(BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool bObjectivesCompleted = false;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool bShowStoryScreen = true;
 };

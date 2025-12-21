@@ -19,6 +19,7 @@ void AStealthHUD::ShowSettingsMenu(APlayerController* PlayerController)
 		if (SettingsMenuClass)
 		{
 			SettingsMenu = CreateWidget<UUserWidget>(GetWorld(), SettingsMenuClass);
+			UWidgetBlueprintLibrary::SetInputMode_GameAndUIEx(PlayerController, SettingsMenu, EMouseLockMode::DoNotLock, true);
 			SettingsMenu->AddToViewport();
 			PlayerController->SetPause(true);
 			//UWidgetBlueprintLibrary::SetInputMode_GameAndUIEx(PlayerController, SettingsMenu, EMouseLockMode::DoNotLock, true);
@@ -37,6 +38,17 @@ void AStealthHUD::HideSettingsMenu(APlayerController* PlayerController)
 	}
 
 	PlayerController->bShowMouseCursor = false;
+}
+
+void AStealthHUD::ShowStoryScreen(APlayerController* PlayerController)
+{
+	if (StoryMenuClass)
+	{
+		StoryMenu = CreateWidget<UUserWidget>(GetWorld(), StoryMenuClass);
+		StoryMenu->AddToViewport();
+		UWidgetBlueprintLibrary::SetInputMode_UIOnlyEx(PlayerController, StoryMenu, EMouseLockMode::DoNotLock);
+		StoryMenu->SetFocus();
+	}
 }
 
 void AStealthHUD::ShowDeathScreen_Implementation()

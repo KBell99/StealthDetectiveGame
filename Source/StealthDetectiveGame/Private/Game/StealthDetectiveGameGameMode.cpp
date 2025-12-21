@@ -10,6 +10,8 @@
 #include "Kismet/GameplayStatics.h"
 #include "Objective/StealthTrailMarker.h"
 #include "Objective/StealthTrailMarkerManager.h"
+#include "Player/StealthDetectiveGamePlayerController.h"
+#include "UI/StealthHUD.h"
 
 void AStealthDetectiveGameGameMode::EvidenceFound(FGameplayTag EvidenceTag)
 {
@@ -85,7 +87,45 @@ void AStealthDetectiveGameGameMode::BeginPlay()
 		PlayerCharacter->OnActiveTrail.AddUObject(this, &AStealthDetectiveGameGameMode::SetActiveTrailVisibility);
 		PlayerCharacter->OnPlayerDead.AddUObject(this, &AStealthDetectiveGameGameMode::PlayerDied);
 	}
+	
+	UStealthGameInstance* GI = Cast<UStealthGameInstance>(GetGameInstance());
+	if (GI && GI->bShowStoryScreen)
+	{
+		UWorld* World = GetWorld();
+		if (World)
+		{
+			UGameplayStatics::SetGamePaused(World, true);
+		}
+		ShowStoryScreen(PlayerCharacter);
+	} else
+	{
+		StartGame();
+	}
+}
 
+void AStealthDetectiveGameGameMode::ShowStoryScreen(AStealthDetectiveGameCharacter* PlayerCharacter)
+{
+	if (PlayerCharacter)
+	{
+		AStealthDetectiveGamePlayerController* PC = Cast<AStealthDetectiveGamePlayerController>(PlayerCharacter->GetController());
+		if (PC)
+		{
+			AStealthHUD* StealthHUD = Cast<AStealthHUD>(PC->GetHUD());
+			if (StealthHUD)
+			{
+				StealthHUD->ShowStoryScreen(PC);
+			}
+		}
+	}	
+}
+
+void AStealthDetectiveGameGameMode::StartGame()
+{
+	UWorld* World = GetWorld();
+	if (World)
+	{
+		UGameplayStatics::SetGamePaused(World, false);
+	}
 	if (BackgroundMusic)
 	{
 		BGMComponent = UGameplayStatics::SpawnSound2D(GetWorld(), BackgroundMusic);

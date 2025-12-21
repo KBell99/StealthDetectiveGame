@@ -5,6 +5,7 @@
 
 #include "AI/StealthAIController.h"
 #include "Character/StealthDetectiveGameCharacter.h"
+#include "Kismet/GameplayStatics.h"
 #include "Perception/AIPerceptionComponent.h"
 
 void AStealthEnemy::AttackMontageEnded(UAnimMontage* Montage, bool bInterrupted)
@@ -75,8 +76,8 @@ void AStealthEnemy::DoAttackTrace(FName DamageSourceBone)
 			/** does the actor have the player tag? */
 			if (AStealthDetectiveGameCharacter* PlayerCharacter = Cast<AStealthDetectiveGameCharacter>(CurrentHit.GetActor()))
 			{
+				UGameplayStatics::PlaySoundAtLocation(this, HitSound, PlayerCharacter->GetActorLocation());
 				PlayerCharacter->Stun();
-				
 			}
 		}
 	}

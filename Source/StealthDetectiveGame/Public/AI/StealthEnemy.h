@@ -29,6 +29,8 @@ class STEALTHDETECTIVEGAME_API AStealthEnemy : public AStealthCharacterBase, pub
 
 	UPROPERTY(EditAnywhere, Category = "AI", meta = (AllowPrivateAccess))
 	UAIPerceptionComponent* AIPerceptionComponent;
+	UPROPERTY(EditAnywhere, Category = "Sound", meta = (AllowPrivateAccess))
+	USoundBase* HitSound;
 	
 
 protected:
