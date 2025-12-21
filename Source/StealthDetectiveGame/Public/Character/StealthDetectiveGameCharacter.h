@@ -70,7 +70,9 @@ class AStealthDetectiveGameCharacter : public AStealthCharacterBase
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="AI", meta = (AllowPrivateAccess = "true"))
 	UAIPerceptionStimuliSourceComponent* PerceptionStimuliSourceComponent;
 	
+	UPROPERTY(BlueprintReadOnly, Category="State", meta = (AllowPrivateAccess = "true"))
 	bool bIsCameraEnabled = false;
+	UPROPERTY(BlueprintReadOnly, Category="State", meta = (AllowPrivateAccess = "true"))
 	bool bDetectiveMode = false;
 	bool bMenuIsOpen = false;
 
