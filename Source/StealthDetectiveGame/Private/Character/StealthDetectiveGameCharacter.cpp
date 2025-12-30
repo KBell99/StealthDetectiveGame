@@ -436,7 +436,6 @@ void AStealthDetectiveGameCharacter::Interact()
 		{
 			IInteractable::Execute_OnInteract(Actor, this);
 			UE_LOG(LogStealthDetectiveGame, Log, TEXT("Interacted with: %s"), *Actor->GetName());
-			return;
 		}
 	}
 }
