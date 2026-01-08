@@ -119,7 +119,7 @@ void AStealthDetectiveGameGameMode::ShowStoryScreen(AStealthDetectiveGameCharact
 	}	
 }
 
-void AStealthDetectiveGameGameMode::StartGame()
+void AStealthDetectiveGameGameMode::StartGame_Implementation()
 {
 	UWorld* World = GetWorld();
 	if (World)
@@ -148,21 +148,14 @@ void AStealthDetectiveGameGameMode::PlayerDied(AStealthDetectiveGameCharacter* D
 		BGMComponent->Stop();
 	}
 	
-	AStealthGameStateBase* GS = GetGameState<AStealthGameStateBase>();
-	checkf(GS, TEXT("GameState is not of type AStealthGameStateBase"));
-	UStealthGameInstance* GI = Cast<UStealthGameInstance>(GetGameInstance());
-	checkf(GI, TEXT("GameInstance is not of type UStealthGameInstance"));
+
 	UAudioComponent* AudioComponent = UGameplayStatics::SpawnSoundAtLocation(this, PlayerDeathSound, DeadCharacter->GetActorLocation());
 
 	if (AudioComponent)
 	{
-		AudioComponent->OnAudioFinishedNative.AddLambda([this, GS, GI](UAudioComponent* FinishedComponent)
+		AudioComponent->OnAudioFinishedNative.AddLambda([this](UAudioComponent* FinishedComponent)
 		{
-			UE_LOG(LogStealthDetectiveGame, Log, TEXT("Restarting Level after Player Death Sound Finished"));
-
-			bool bAllObjectivesCompleted = GS->AllObjectivesCompleted();
-			GI->bObjectivesCompleted = bAllObjectivesCompleted;
-			UGameplayStatics::OpenLevelBySoftObjectPtr(this, GameEndingMap);
+			EndGame();
 		});
 	}
 }
@@ -171,3 +164,15 @@ void AStealthDetectiveGameGameMode::TravelToMap(const FString& MapName)
 {
 	UGameplayStatics::OpenLevelBySoftObjectPtr(this, Maps.FindChecked(MapName));
 };
+
+void AStealthDetectiveGameGameMode::EndGame()
+{
+	AStealthGameStateBase* GS = GetGameState<AStealthGameStateBase>();
+	checkf(GS, TEXT("GameState is not of type AStealthGameStateBase"));
+	UStealthGameInstance* GI = Cast<UStealthGameInstance>(GetGameInstance());
+	checkf(GI, TEXT("GameInstance is not of type UStealthGameInstance"));
+	
+	bool bAllObjectivesCompleted = GS->AllObjectivesCompleted();
+	GI->bObjectivesCompleted = bAllObjectivesCompleted;
+	UGameplayStatics::OpenLevelBySoftObjectPtr(this, GameEndingMap);
+}

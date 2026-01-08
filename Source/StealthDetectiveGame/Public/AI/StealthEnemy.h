@@ -33,6 +33,8 @@ class STEALTHDETECTIVEGAME_API AStealthEnemy : public AStealthCharacterBase, pub
 	USoundBase* HitSound;
 	
 
+	
+
 protected:
 	/** Distance ahead of the character that melee attack sphere collision traces will extend */
 	UPROPERTY(EditAnywhere, Category="Melee Attack|Trace", meta = (ClampMin = 0, ClampMax = 500, Units = "cm"))
@@ -53,10 +55,15 @@ protected:
 	FOnMontageEnded OnAttackMontageEnded;
 
 	void AttackMontageEnded(UAnimMontage* Montage, bool bInterrupted);
+	
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category="AI")
+	void TreeSucceeded(AStealthDetectiveGameCharacter* DeadCharacter); 
+	
 
 	
 public:
 	AStealthEnemy();
+	virtual void BeginPlay() override;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI")
 	TArray<AActor*> PatrolPoints;

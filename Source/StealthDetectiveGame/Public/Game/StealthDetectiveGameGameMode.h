@@ -30,8 +30,8 @@ public:
 	
 	virtual void ShowStoryScreen(AStealthDetectiveGameCharacter* PlayerCharacter);
 	
-	UFUNCTION(BlueprintCallable)
-	virtual void StartGame();
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+	void StartGame();
 	
 
 	UFUNCTION()
@@ -40,6 +40,9 @@ public:
 	void CheckObjectiveCompletion(FGameplayTag ObjectiveTag);
 
 	void PlayerDied(AStealthDetectiveGameCharacter* DeadCharacter);
+	
+	UFUNCTION(BlueprintCallable)
+	void EndGame();
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Sound")
 	USoundBase* EvidenceFoundSound;

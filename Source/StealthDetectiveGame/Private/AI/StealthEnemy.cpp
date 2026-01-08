@@ -8,19 +8,24 @@
 #include "Kismet/GameplayStatics.h"
 #include "Perception/AIPerceptionComponent.h"
 
-void AStealthEnemy::AttackMontageEnded(UAnimMontage* Montage, bool bInterrupted)
-{
-	// clear the attacking flag
-	bIsAttacking = false;
 
-	OnAttackCompleted.Broadcast();
-}
 
 AStealthEnemy::AStealthEnemy()
 {
 	AIPerceptionComponent = CreateDefaultSubobject<UAIPerceptionComponent>(TEXT("AIPerceptionComponent"));
 
 	OnAttackMontageEnded.BindUObject(this, &AStealthEnemy::AttackMontageEnded);
+}
+
+void AStealthEnemy::BeginPlay()
+{
+	Super::BeginPlay();
+	
+	if (AStealthDetectiveGameCharacter* Player = Cast<AStealthDetectiveGameCharacter>(UGameplayStatics::GetPlayerCharacter(this, 0)))
+	{
+		Player->OnPlayerDead.AddUObject(this, &AStealthEnemy::TreeSucceeded);
+	}
+	
 }
 
 FVector AStealthEnemy::GetCurrentPatrolPointLocation()
@@ -107,4 +112,16 @@ void AStealthEnemy::DoAIPunchAttack()
 			AnimInstance->Montage_SetEndDelegate(OnAttackMontageEnded, PunchAttackMontage);
 		}
 	}
+}
+
+void AStealthEnemy::TreeSucceeded_Implementation(AStealthDetectiveGameCharacter* DeadCharacter)
+{
+}
+
+void AStealthEnemy::AttackMontageEnded(UAnimMontage* Montage, bool bInterrupted)
+{
+	// clear the attacking flag
+	bIsAttacking = false;
+
+	OnAttackCompleted.Broadcast();
 }

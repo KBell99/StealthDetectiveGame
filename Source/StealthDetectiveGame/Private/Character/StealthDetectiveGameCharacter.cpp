@@ -15,7 +15,7 @@
 #include "StealthDetectiveGame.h"
 #include "Objective/StealthEvidence.h"
 #include "Player/StealthDetectiveGamePlayerController.h"
-#include "DrawDebugHelpers.h"
+
 #include "AI/StealthEnemy.h"
 #include "Interface/Interactable.h"
 #include "Objective/StealthTrailStart.h"
@@ -243,12 +243,9 @@ AStealthEvidence* AStealthDetectiveGameCharacter::EvidenceInView() const
 		QueryParams
 	);
 
-	DrawDebugBox(GetWorld(), TraceEnd, BoxExtent, BoxRotation, FColor::Green, false, 2.0f);
-
-
 	for (const FHitResult& Hit : HitResults)
 	{
-		if (AStealthEvidence* Evidence = Cast<AStealthEvidence>(Hit.GetActor()))
+		if (AStealthEvidence* Evidence = Cast<AStealthEvidence>( Hit.GetActor()))
 		{
 			// Visibility check: Line trace from camera to evidence actor
 			FHitResult VisibilityHit;
@@ -260,8 +257,7 @@ AStealthEvidence* AStealthDetectiveGameCharacter::EvidenceInView() const
 				ECC_Visibility,
 				QueryParams
 			);
-
-			DrawDebugLine(GetWorld(), CameraLocation, EvidenceLocation, FColor::Blue, false, 2.0f);
+			
 			UE_LOG(LogStealthDetectiveGame, Log, TEXT("Visibility Hit Actor: %s"),
 			       *GetNameSafe(VisibilityHit.GetActor()));
 
@@ -307,30 +303,38 @@ void AStealthDetectiveGameCharacter::FlashPhotography()
 
 	FCollisionQueryParams QueryParams;
 	QueryParams.AddIgnoredActor(this);
-
+	
+	// FHitResult SingleHit;
+	// bool bHadHit = GetWorld()->SweepSingleByChannel(
+	// 	SingleHit,
+	// 	TraceStart,
+	// 	TraceEnd,
+	// 	BoxRotation,
+	// 	ECC_GameTraceChannel3,
+	// 	FCollisionShape::MakeBox(FlashBoxExtent),
+	// 	QueryParams
+	// );
 	TArray<FHitResult> HitResults;
+	
 	GetWorld()->SweepMultiByChannel(
 		HitResults,
 		TraceStart,
 		TraceEnd,
 		BoxRotation,
-		ECC_Visibility,
+		ECC_GameTraceChannel3,
 		FCollisionShape::MakeBox(FlashBoxExtent),
 		QueryParams
 	);
-
-	DrawDebugBox(GetWorld(), TraceEnd, FlashBoxExtent, BoxRotation, FColor::Yellow, false, 2.0f);
-
-	for (const FHitResult& Hit : HitResults)
+	
+	for (const FHitResult& SingleHit : HitResults)
 	{
-		if (AStealthEnemy* Enemy = Cast<AStealthEnemy>(Hit.GetActor()))
+		if (AStealthEnemy* Enemy = Cast<AStealthEnemy>(SingleHit.GetActor()))
 		{
 			Enemy->Stun();
 			UE_LOG(LogStealthDetectiveGame, Log, TEXT("Enemy Stunned: %s"), *Enemy->GetName());
-			break;
 		}
 	}
-
+	
 	CameraFlash();
 
 	OnFlashPictureTaken.Broadcast(FlashCooldown);
