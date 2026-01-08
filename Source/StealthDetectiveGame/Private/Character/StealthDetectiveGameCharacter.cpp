@@ -158,7 +158,7 @@ void AStealthDetectiveGameCharacter::DoCrouch(const FInputActionValue& Value)
 	{
 		GetCharacterMovement()->bCrouchMaintainsBaseLocation = true;
 		Crouch();
-		GetCapsuleComponent()->SetCapsuleHalfHeight(GetCharacterMovement()->CrouchedHalfHeight);
+		GetCapsuleComponent()->SetCapsuleHalfHeight(GetCharacterMovement()->GetCrouchedHalfHeight());
 		bIsCrouched = true;
 	}
 }

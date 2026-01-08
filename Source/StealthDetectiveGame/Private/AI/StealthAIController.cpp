@@ -15,7 +15,7 @@ AStealthAIController::AStealthAIController()
 	bAttachToPawn = true;
 }
 
-void AStealthAIController::PawnIsStunned(float sssHitDistance)
+void AStealthAIController::PawnIsStunned(float HitDistance)
 {
 	FStunDuration StunDuration;
 	StunDuration.Duration = StunDurations.GetValueAtLevel(HitDistance);

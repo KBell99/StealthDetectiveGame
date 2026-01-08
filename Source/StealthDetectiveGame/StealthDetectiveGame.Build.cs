@@ -20,7 +20,8 @@ public class StealthDetectiveGame : ModuleRules
 			"UMG",
 			"Slate",
 			"GameplayTags",
-			"GameplayAbilities"
+			"GameplayAbilities",
+			"CommonUI"
 		});
 
 		PrivateDependencyModuleNames.AddRange(new string[] { });
